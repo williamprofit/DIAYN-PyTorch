@@ -127,4 +127,5 @@ class Logger:
         self.max_episode_reward = checkpoint["max_episode_reward"]
         self.running_logq_zs = checkpoint["running_logq_zs"]
 
-        return checkpoint["episode"], self.running_logq_zs, *checkpoint["rng_states"]
+        # return checkpoint["episode"], self.running_logq_zs, *checkpoint["rng_states"]
+        return checkpoint["episode"], self.running_logq_zs, checkpoint["rng_states"]
