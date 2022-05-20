@@ -20,9 +20,9 @@ if __name__ == "__main__":
     n_actions = test_env.action_space.shape[0]
     action_bounds = [test_env.action_space.low[0], test_env.action_space.high[0]]
 
-    params.update({"n_states": n_states,
-                   "n_actions": n_actions,
-                   "action_bounds": action_bounds})
+    params.update(
+        {"n_states": n_states, "n_actions": n_actions, "action_bounds": action_bounds}
+    )
     print("params:", params)
     test_env.close()
     del test_env, n_states, n_actions, action_bounds
@@ -36,7 +36,14 @@ if __name__ == "__main__":
     if params["do_train"]:
 
         if not params["train_from_scratch"]:
-            episode, last_logq_zs, np_rng_state, *env_rng_states, torch_rng_state, random_rng_state = logger.load_weights()
+            (
+                episode,
+                last_logq_zs,
+                np_rng_state,
+                *env_rng_states,
+                torch_rng_state,
+                random_rng_state,
+            ) = logger.load_weights()
             agent.hard_update_target_network()
             min_episode = episode
             np.random.set_state(np_rng_state)
@@ -80,17 +87,18 @@ if __name__ == "__main__":
                 if done:
                     break
 
-            logger.log(episode,
-                       episode_reward,
-                       z,
-                       sum(logq_zses) / len(logq_zses),
-                       step,
-                       np.random.get_state(),
-                       env.np_random.get_state(),
-                       env.observation_space.np_random.get_state(),
-                       env.action_space.np_random.get_state(),
-                       *agent.get_rng_states(),
-                       )
+            logger.log(
+                episode,
+                episode_reward,
+                z,
+                sum(logq_zses) / len(logq_zses),
+                step,
+                np.random.get_state(),
+                env.np_random.get_state(),
+                env.observation_space.np_random.get_state(),
+                env.action_space.np_random.get_state(),
+                *agent.get_rng_states(),
+            )
 
     else:
         logger.load_weights()

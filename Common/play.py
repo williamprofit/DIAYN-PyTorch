@@ -14,7 +14,8 @@ class Play:
         self.n_skills = n_skills
         self.agent.set_policy_net_to_cpu_mode()
         self.agent.set_policy_net_to_eval_mode()
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        # self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+        self.fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         if not os.path.exists("Vid/"):
             os.mkdir("Vid/")
 
@@ -27,7 +28,7 @@ class Play:
     def evaluate(self):
 
         for z in range(self.n_skills):
-            video_writer = cv2.VideoWriter(f"Vid/skill{z}" + ".avi", self.fourcc, 50.0, (250, 250))
+            video_writer = cv2.VideoWriter(f"Vid/skill{z}" + ".mp4", self.fourcc, 50.0, (250, 250))
             s = self.env.reset()
             s = self.concat_state_latent(s, z, self.n_skills)
             episode_reward = 0

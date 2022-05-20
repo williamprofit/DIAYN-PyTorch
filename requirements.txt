@@ -5,3 +5,5 @@ psutil
 torch
 tqdm
 tensorboard
+sklearn
+matplotlib
