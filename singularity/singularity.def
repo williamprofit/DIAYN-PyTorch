@@ -1,0 +1,130 @@
+Bootstrap: library
+From: airl_lab/default/airl_env:bare_ci
+
+%labels
+  Author william.profit@imperial.ac.uk
+  Version v0.0.1
+
+%post
+  export LD_LIBRARY_PATH="/workspace/lib:$LD_LIBRARY_PATH"
+
+  mkdir -p /git/sferes2/modules
+  cd /git/sferes2/
+  apt-get update
+  apt-get upgrade -y
+  DEBIAN_FRONTEND=noninteractive apt-get install -y python3-git python3-matplotlib python3-pip libsdl1.2-dev libomp-dev ffmpeg
+  apt-get install -y gcc libboost-system-dev
+  rm -rf /var/lib/apt/lists/*
+
+  # Python libraries 
+  pip3 install --upgrade pip
+  pip3 install torch==1.7.1
+  pip3 install numpy==1.19.5
+  pip3 install gym==0.15.4
+  pip3 install pybullet==3.0.8
+  pip3 install Cython==0.29.21
+  pip3 install scikit-learn==0.21.3
+  pip3 install opencv_contrib_python
+  pip3 install psutil
+  pip3 install tqdm
+  pip3 install tensorboard
+  pip3 install sklearn
+  pip3 installmatplotlib
+  pip install pybind11
+
+  chmod -R 777 /usr
+  chmod -R 777 /git
+
+  # Libfastsim / Pyfastsim / fastsim_gym
+  cd /git/sferes2/modules/
+  git clone https://github.com/jbmouret/libfastsim.git
+  sed -i 's/print \(.*\)/print(\1)/g' ./libfastsim/wscript # adapting wscript from Libfastsim to Python3
+  git clone https://github.com/alexendy/pyfastsim.git
+  # sed -i 's/print \(.*\)/print(\1)/g' ./pyfastsim/fastsim-boost2std-fixdisplay.patch # adapting patch from Pyfastsim to Python3
+  git clone https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/fastsim-gym
+  # cp pyfastsim/fastsim-boost2std-fixdisplay.patch libfastsim/
+  cd /git/sferes2/modules/libfastsim
+  # git apply fastsim-boost2std-fixdisplay.patch
+  ./waf configure
+  ./waf build
+  ./waf install
+  cd /git/sferes2/
+  cd /git/sferes2/modules/pyfastsim
+  pip3 install .
+  cd /git/sferes2/modules/fastsim-gym
+  pip3 install .
+
+
+  # Installing the QDGym libraries (the "normal" one and the "deterministic" one)
+  if [ ! -z "${CI_JOB_TOKEN}" ] # this enables the automated build in the CI environment
+    then
+      pip3 install git+https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2019-2020/olle_nilsson/QDgym.git#egg=QDgym
+      pip3 install git+https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-deterministic.git#egg=QDgymDeterministic
+      pip3 install git+https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-libfastsim.git#egg=QDgymLibfastsim
+      pip3 install git+https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-aurora.git#egg=QDgymAurora
+  elif [ ! -z "${PERSONAL_TOKEN}" ]
+    then
+      pip3 install git+https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2019-2020/olle_nilsson/QDgym.git#egg=QDgym
+      pip3 install git+https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-deterministic.git#egg=QDgymDeterministic
+      pip3 install git+https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-libfastsim.git#egg=QDgymLibfastsim
+      pip3 install git+https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-aurora.git#egg=QDgymAurora
+  else
+      pip3 install git+https://gitlab.doc.ic.ac.uk/AIRL/students_projects/2019-2020/olle_nilsson/QDgym.git#egg=QDgym
+      pip3 install git+https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-deterministic.git#egg=QDgymDeterministic
+      pip3 install git+https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-libfastsim.git@sensory-info#egg=QDgymLibfastsim
+      pip3 install git+https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-aurora.git#egg=QDgymAurora
+  fi
+
+  # Rest of Python libraries 
+  pip3 install seaborn pandas GPUtil psutil
+  pip3 install brewer2mpl
+  pip3 install tabulate
+  pip3 install python-gitlab
+  pip3 install netpbmfile
+  
+  mkdir -p /git/sferes2/exp/diayn
+  cd /git/sferes2/exp/
+
+  #====================================================================================================
+  exit 0 #NOTFORFINAL - the lines below this "exit" will be executed only when building the final image
+  #====================================================================================================
+
+  # Clone the repository
+
+  if [ ! -z "${CI_JOB_TOKEN}" ] # this enables the automated build in the CI environment
+    then
+      git clone  --recurse-submodules --single-branch --branch master https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/simple-pga-map-elites ./simple-pga-map-elites
+      git clone  --recurse-submodules --single-branch --branch master https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/qdgym-aurora ./qdgym-aurora
+  elif [ ! -z "${PERSONAL_TOKEN}" ]
+    then
+      git clone  --recurse-submodules --single-branch --branch master https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/simple-pga-map-elites ./simple-pga-map-elites
+      git clone  --recurse-submodules --single-branch --branch master https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/qdgym-aurora ./qdgym-aurora
+  else
+      git clone  --recurse-submodules --single-branch --branch master https://github.com/williamprofit/DIAYN-PyTorch.git ./diayn
+      git clone  --recurse-submodules --single-branch --branch sensory-info https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-libfastsim ./qdgym-libfastsim
+      git clone  --recurse-submodules --single-branch --branch sensory-info https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-aurora ./qdgym-aurora
+  fi
+
+  pip install -e ./qdgym-aurora
+
+%runscript
+    CURPATH=$(pwd)
+    cd /git/sferes2/exp/diayn
+
+    DIRNAME=results
+    mkdir -p $CURPATH/$DIRNAME/
+
+    PATHNAME=$(date +%Y-%m-%d_%H_%M_%S)_$$
+    tmp_dir=$(mktemp -d -p $CURPATH/$DIRNAME/ $PATHNAME.XXX)
+    mkdir -p $tmp_dir
+    echo $tmp_dir
+
+    # Main
+    python3 run_experiment.py --save_path $tmp_dir --mem_size=1000000 --interval=100 --do_train "$@"
+
+    # Analysis
+    # python3 run_plots.py --save_path $DIRNAME --results_path $DIRNAME
+    python3 project.py  --save_path $tmp_dir "$@"
+
+%help
+    This is the development and running environment for the DIAYN algorithm on QDgym environments. 

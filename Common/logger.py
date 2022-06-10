@@ -12,11 +12,12 @@ class Logger:
     def __init__(self, agent, **config):
         self.config = config
         self.agent = agent
-        self.log_dir = (
-            self.config["env_name"][:-3]
-            + "/"
-            + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        )
+        # self.log_dir = (
+        #     self.config["env_name"][:-3]
+        #     + "/"
+        #     + datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
+        # )
+        self.log_dir = self.config["save_path"]
         self.start_time = 0
         self.duration = 0
         self.running_logq_zs = 0
@@ -25,17 +26,17 @@ class Logger:
         self.to_gb = lambda in_bytes: in_bytes / 1024 / 1024 / 1024
 
         if self.config["do_train"] and self.config["train_from_scratch"]:
-            self._create_wights_folder(self.log_dir)
+            self._create_weights_folder(self.log_dir)
             self._log_params()
 
     @staticmethod
-    def _create_wights_folder(dir):
-        if not os.path.exists("Checkpoints"):
-            os.mkdir("Checkpoints")
-        os.mkdir("Checkpoints/" + dir)
+    def _create_weights_folder(dir):
+        if not os.path.exists(dir):
+            os.mkdir(dir)
+        os.mkdir(f"{dir}/checkpoints")
 
     def _log_params(self):
-        with SummaryWriter("Logs/" + self.log_dir) as writer:
+        with SummaryWriter(self.log_dir + "/logs") as writer:
             for k, v in self.config.items():
                 writer.add_text(k, str(v))
 
@@ -93,7 +94,7 @@ class Logger:
                 )
             )
 
-        with SummaryWriter("Logs/" + self.log_dir) as writer:
+        with SummaryWriter(self.log_dir + "/logs") as writer:
             writer.add_scalar("Max episode reward", self.max_episode_reward, episode)
             writer.add_scalar("Running logq(z|s)", self.running_logq_zs, episode)
             writer.add_histogram(str(skill), episode_reward)
@@ -119,7 +120,7 @@ class Logger:
                 "max_episode_reward": self.max_episode_reward,
                 "running_logq_zs": self.running_logq_zs,
             },
-            "Checkpoints/" + self.log_dir + "/params.pth",
+            self.log_dir + "/checkpoints/params.pth",
         )
 
     def load_weights(self):

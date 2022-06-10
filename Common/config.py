@@ -51,8 +51,9 @@ def get_params():
         "--n_evals",
         default=1000,
         type=int,
-        help="How many iterations should an agent go through during evaluation"
+        help="How many iterations should an agent go through during evaluation",
     )
+    parser.add_argument("--save_path", default="./results", type=str, help="Save path")
 
     parser_params = parser.parse_args()
 
