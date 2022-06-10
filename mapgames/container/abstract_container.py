@@ -1,7 +1,7 @@
 import abc
 from typing import List
 
-from mapgames import Individual
+from mapgames.container import Individual
 
 def write_array(a, f):
     for i in a:

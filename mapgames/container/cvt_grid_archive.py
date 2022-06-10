@@ -8,8 +8,8 @@ from scipy.spatial import Voronoi
 from sklearn.neighbors import KDTree
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-from mapgames import AbstractContainer
-from mapgames import Individual
+from mapgames.container import AbstractContainer
+from mapgames.container import Individual
 
 mpl.rcParams["pdf.fonttype"] = 42
 mpl.rcParams["ps.fonttype"] = 42

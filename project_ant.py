@@ -1,4 +1,5 @@
 import QDgymAurora
+import QDgymLibfastsim
 import gym
 from Brain.agent import SACAgent
 from Common import Play, Logger, get_params
@@ -7,7 +8,7 @@ from tqdm import tqdm
 import random
 from itertools import count
 
-from mapgames import CvtGridArchive, Individual
+from mapgames.container import CvtGridArchive, Individual
 
 def concat_state_latent(s, z_, n):
     z_one_hot = np.zeros(n)
