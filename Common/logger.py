@@ -124,7 +124,7 @@ class Logger:
         )
 
     def load_weights(self):
-        model_dir = glob.glob("Checkpoints/" + self.config["env_name"][:-3] + "/")
+        model_dir = glob.glob(f"{self.log_dir}/checkpoints/")
         model_dir.sort()
         checkpoint = torch.load(model_dir[-1] + "/params.pth")
         self.log_dir = model_dir[-1].split(os.sep)[-1]

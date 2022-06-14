@@ -19,10 +19,10 @@ class SACAgent:
 
         torch.manual_seed(self.config["seed"])
         self.policy_network = PolicyNetwork(
-            n_states=self.n_states + self.n_skills,
-            n_actions=self.config["n_actions"],
-            action_bounds=self.config["action_bounds"],
-            n_hidden_filters=self.config["n_hiddens"],
+            self.n_states + self.n_skills,
+            self.config["n_actions"],
+            self.config["action_bounds"],
+            neurons_list=self.config["neurons_list"]
         ).to(self.device)
 
         self.q_value_network1 = QvalueNetwork(

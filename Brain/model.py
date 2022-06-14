@@ -19,13 +19,19 @@ class Discriminator(nn.Module, ABC):
         self.n_skills = n_skills
         self.n_hidden_filters = n_hidden_filters
 
-        self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
+        self.hidden1 = nn.Linear(
+            in_features=self.n_states, out_features=self.n_hidden_filters
+        )
         init_weight(self.hidden1)
         self.hidden1.bias.data.zero_()
-        self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
+        self.hidden2 = nn.Linear(
+            in_features=self.n_hidden_filters, out_features=self.n_hidden_filters
+        )
         init_weight(self.hidden2)
         self.hidden2.bias.data.zero_()
-        self.q = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_skills)
+        self.q = nn.Linear(
+            in_features=self.n_hidden_filters, out_features=self.n_skills
+        )
         init_weight(self.q, initializer="xavier uniform")
         self.q.bias.data.zero_()
 
@@ -42,10 +48,14 @@ class ValueNetwork(nn.Module, ABC):
         self.n_states = n_states
         self.n_hidden_filters = n_hidden_filters
 
-        self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
+        self.hidden1 = nn.Linear(
+            in_features=self.n_states, out_features=self.n_hidden_filters
+        )
         init_weight(self.hidden1)
         self.hidden1.bias.data.zero_()
-        self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
+        self.hidden2 = nn.Linear(
+            in_features=self.n_hidden_filters, out_features=self.n_hidden_filters
+        )
         init_weight(self.hidden2)
         self.hidden2.bias.data.zero_()
         self.value = nn.Linear(in_features=self.n_hidden_filters, out_features=1)
@@ -65,10 +75,15 @@ class QvalueNetwork(nn.Module, ABC):
         self.n_hidden_filters = n_hidden_filters
         self.n_actions = n_actions
 
-        self.hidden1 = nn.Linear(in_features=self.n_states + self.n_actions, out_features=self.n_hidden_filters)
+        self.hidden1 = nn.Linear(
+            in_features=self.n_states + self.n_actions,
+            out_features=self.n_hidden_filters,
+        )
         init_weight(self.hidden1)
         self.hidden1.bias.data.zero_()
-        self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
+        self.hidden2 = nn.Linear(
+            in_features=self.n_hidden_filters, out_features=self.n_hidden_filters
+        )
         init_weight(self.hidden2)
         self.hidden2.bias.data.zero_()
         self.q_value = nn.Linear(in_features=self.n_hidden_filters, out_features=1)
@@ -83,31 +98,45 @@ class QvalueNetwork(nn.Module, ABC):
 
 
 class PolicyNetwork(nn.Module, ABC):
-    def __init__(self, n_states, n_actions, action_bounds, n_hidden_filters=256):
+    def __init__(self, n_states, n_actions, action_bounds, neurons_list=[128, 128]):
         super(PolicyNetwork, self).__init__()
         self.n_states = n_states
-        self.n_hidden_filters = n_hidden_filters
         self.n_actions = n_actions
         self.action_bounds = action_bounds
+        self.neurons_list = neurons_list
 
-        self.hidden1 = nn.Linear(in_features=self.n_states, out_features=self.n_hidden_filters)
+        self.hidden1 = nn.Linear(
+            in_features=self.n_states, out_features=neurons_list[0]
+        )
         init_weight(self.hidden1)
         self.hidden1.bias.data.zero_()
-        self.hidden2 = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_hidden_filters)
-        init_weight(self.hidden2)
-        self.hidden2.bias.data.zero_()
 
-        self.mu = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_actions)
+        if len(neurons_list) == 2:
+            self.hidden2 = nn.Linear(
+                in_features=neurons_list[0], out_features=neurons_list[1]
+            )
+            init_weight(self.hidden2)
+            self.hidden2.bias.data.zero_()
+
+        self.mu = nn.Linear(
+            in_features=neurons_list[0] if len(neurons_list) == 1 else neurons_list[1],
+            out_features=self.n_actions,
+        )
         init_weight(self.mu, initializer="xavier uniform")
         self.mu.bias.data.zero_()
 
-        self.log_std = nn.Linear(in_features=self.n_hidden_filters, out_features=self.n_actions)
+        self.log_std = nn.Linear(
+            in_features=neurons_list[0] if len(neurons_list) == 1 else neurons_list[1],
+            out_features=self.n_actions,
+        )
         init_weight(self.log_std, initializer="xavier uniform")
         self.log_std.bias.data.zero_()
 
     def forward(self, states):
         x = F.relu(self.hidden1(states))
-        x = F.relu(self.hidden2(x))
+
+        if len(self.neurons_list) == 2:
+            x = F.relu(self.hidden2(x))
 
         mu = self.mu(x)
         log_std = self.log_std(x)
@@ -122,6 +151,8 @@ class PolicyNetwork(nn.Module, ABC):
         action = torch.tanh(u)
         log_prob = dist.log_prob(value=u)
         # Enforcing action bounds
-        log_prob -= torch.log(1 - action ** 2 + 1e-6)
+        log_prob -= torch.log(1 - action**2 + 1e-6)
         log_prob = log_prob.sum(-1, keepdim=True)
-        return (action * self.action_bounds[1]).clamp_(self.action_bounds[0], self.action_bounds[1]), log_prob
+        return (action * self.action_bounds[1]).clamp_(
+            self.action_bounds[0], self.action_bounds[1]
+        ), log_prob

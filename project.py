@@ -68,4 +68,5 @@ for _ in tqdm(range(params["n_evals"])):
 
 env.close()
 
-archive.plot(save_path="./archive")
+archive.plot(save_path=f"{params['save_path']}/archive")
+archive.save(params["n_evals"], "archive", params["save_path"])

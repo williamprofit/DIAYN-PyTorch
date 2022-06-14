@@ -29,7 +29,7 @@ From: airl_lab/default/airl_env:bare_ci
   pip3 install tqdm
   pip3 install tensorboard
   pip3 install sklearn
-  pip3 installmatplotlib
+  pip3 install matplotlib
   pip install pybind11
 
   chmod -R 777 /usr
@@ -82,7 +82,7 @@ From: airl_lab/default/airl_env:bare_ci
   pip3 install python-gitlab
   pip3 install netpbmfile
   
-  mkdir -p /git/sferes2/exp/diayn
+  mkdir -p /git/sferes2/exp/diayn-pytorch
   cd /git/sferes2/exp/
 
   #====================================================================================================
@@ -100,7 +100,7 @@ From: airl_lab/default/airl_env:bare_ci
       git clone  --recurse-submodules --single-branch --branch master https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/simple-pga-map-elites ./simple-pga-map-elites
       git clone  --recurse-submodules --single-branch --branch master https://oauth:${PERSONAL_TOKEN}@gitlab.doc.ic.ac.uk/AIRL/students_projects/2021-2022/william_profit/qdgym-aurora ./qdgym-aurora
   else
-      git clone  --recurse-submodules --single-branch --branch master https://github.com/williamprofit/DIAYN-PyTorch.git ./diayn
+      git clone  --recurse-submodules --single-branch --branch master https://github.com/williamprofit/DIAYN-PyTorch.git ./diayn-pytorch
       git clone  --recurse-submodules --single-branch --branch sensory-info https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-libfastsim ./qdgym-libfastsim
       git clone  --recurse-submodules --single-branch --branch sensory-info https://gitlab.doc.ic.ac.uk/AIRL/research_projects/manon_flageat/qdgym-aurora ./qdgym-aurora
   fi
@@ -109,7 +109,7 @@ From: airl_lab/default/airl_env:bare_ci
 
 %runscript
     CURPATH=$(pwd)
-    cd /git/sferes2/exp/diayn
+    cd /git/sferes2/exp/diayn-pytorch
 
     DIRNAME=results
     mkdir -p $CURPATH/$DIRNAME/

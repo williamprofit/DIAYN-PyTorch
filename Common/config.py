@@ -54,6 +54,12 @@ def get_params():
         help="How many iterations should an agent go through during evaluation",
     )
     parser.add_argument("--save_path", default="./results", type=str, help="Save path")
+    parser.add_argument(
+        "--neurons_list",
+        default="128 128",
+        type=str,
+        help="Actor NN: [neurons_list + [action dim]]",
+    )
 
     parser_params = parser.parse_args()
 
@@ -71,4 +77,5 @@ def get_params():
     }
     # endregion
     total_params = {**vars(parser_params), **default_params}
+    total_params["neurons_list"] = [int(x) for x in total_params["neurons_list"].split()]
     return total_params
