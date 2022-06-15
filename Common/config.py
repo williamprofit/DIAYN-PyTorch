@@ -60,6 +60,12 @@ def get_params():
         type=str,
         help="Actor NN: [neurons_list + [action dim]]",
     )
+    parser.add_argument(
+        "--n_prior",
+        default=0,
+        type=int,
+        help="Size of prior, set to 0 for no prior.",
+    )
 
     parser_params = parser.parse_args()
 

@@ -12,6 +12,7 @@ class SACAgent:
         self.config = config
         self.n_states = self.config["n_states"]
         self.n_skills = self.config["n_skills"]
+        self.n_prior = self.config["n_prior"]
         self.batch_size = self.config["batch_size"]
         self.p_z = np.tile(p_z, self.batch_size).reshape(self.batch_size, self.n_skills)
         self.memory = Memory(self.config["mem_size"], self.config["seed"])
@@ -22,7 +23,7 @@ class SACAgent:
             self.n_states + self.n_skills,
             self.config["n_actions"],
             self.config["action_bounds"],
-            neurons_list=self.config["neurons_list"]
+            neurons_list=self.config["neurons_list"],
         ).to(self.device)
 
         self.q_value_network1 = QvalueNetwork(
@@ -49,7 +50,7 @@ class SACAgent:
         self.hard_update_target_network()
 
         self.discriminator = Discriminator(
-            n_states=self.n_states,
+            n_states=self.n_prior if self.n_prior != 0 else self.n_states,
             n_skills=self.n_skills,
             n_hidden_filters=self.config["n_hiddens"],
         ).to(self.device)
@@ -75,13 +76,17 @@ class SACAgent:
         action, _ = self.policy_network.sample_or_likelihood(states)
         return action.detach().cpu().numpy()[0]
 
-    def store(self, state, z, done, action, next_state):
+    def store(self, state, z, done, action, next_state, prior=None):
         state = from_numpy(state).float().to("cpu")
         z = torch.ByteTensor([z]).to("cpu")
         done = torch.BoolTensor([done]).to("cpu")
         action = torch.Tensor([action]).to("cpu")
         next_state = from_numpy(next_state).float().to("cpu")
-        self.memory.add(state, z, done, action, next_state)
+
+        if prior is not None:
+            prior = from_numpy(prior).float().to("cpu")
+
+        self.memory.add(state, z, done, action, next_state, prior)
 
     def unpack(self, batch):
         batch = Transition(*zip(*batch))
@@ -102,14 +107,23 @@ class SACAgent:
             .to(self.device)
         )
 
-        return states, zs, dones, actions, next_states
+        if batch.prior[0] is None:
+            prior = None
+        else:
+            prior = (
+                torch.cat(batch.prior)
+                .view(self.batch_size, len(batch.prior[0]))
+                .to(self.device)
+            )
+
+        return states, zs, dones, actions, next_states, prior
 
     def train(self):
         if len(self.memory) < self.batch_size:
             return None
         else:
             batch = self.memory.sample(self.batch_size)
-            states, zs, dones, actions, next_states = self.unpack(batch)
+            states, zs, dones, actions, next_states, prior = self.unpack(batch)
             p_z = from_numpy(self.p_z).to(self.device)
 
             # Calculating the value target
@@ -124,9 +138,13 @@ class SACAgent:
             value = self.value_network(states)
             value_loss = self.mse_loss(value, target_value)
 
-            logits = self.discriminator(
-                torch.split(next_states, [self.n_states, self.n_skills], dim=-1)[0]
-            )
+            if prior is None:
+                logits = self.discriminator(
+                    torch.split(next_states, [self.n_states, self.n_skills], dim=-1)[0]
+                )
+            else:
+                logits = self.discriminator(prior)
+
             p_z = p_z.gather(-1, zs)
             logq_z_ns = log_softmax(logits, dim=-1)
             rewards = logq_z_ns.gather(-1, zs).detach() - torch.log(p_z + 1e-6)
@@ -141,10 +159,14 @@ class SACAgent:
             q1_loss = self.mse_loss(q1, target_q)
             q2_loss = self.mse_loss(q2, target_q)
 
+            if prior is None:
+                logits = self.discriminator(
+                    torch.split(states, [self.n_states, self.n_skills], dim=-1)[0]
+                )
+            else:
+                logits = self.discriminator(prior)
+
             policy_loss = (self.config["alpha"] * log_probs - q).mean()
-            logits = self.discriminator(
-                torch.split(states, [self.n_states, self.n_skills], dim=-1)[0]
-            )
             discriminator_loss = self.cross_ent_loss(logits, zs.squeeze(-1))
 
             self.policy_opt.zero_grad()

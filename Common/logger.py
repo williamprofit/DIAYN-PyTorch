@@ -33,7 +33,7 @@ class Logger:
     def _create_weights_folder(dir):
         if not os.path.exists(dir):
             os.mkdir(dir)
-        os.mkdir(f"{dir}/checkpoints")
+        os.makedirs(f"{dir}/checkpoints", exist_ok=True)
 
     def _log_params(self):
         with SummaryWriter(self.log_dir + "/logs") as writer:

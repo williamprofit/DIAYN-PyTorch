@@ -77,7 +77,13 @@ if __name__ == "__main__":
                 action = agent.choose_action(state)
                 next_state, reward, done, _ = env.step(action)
                 next_state = concat_state_latent(next_state, z, params["n_skills"])
-                agent.store(state, z, done, action, next_state)
+
+                if params["n_prior"] != 0:
+                    prior = env.desc
+                else:
+                    prior = None
+
+                agent.store(state, z, done, action, next_state, prior)
                 logq_zs = agent.train()
                 if logq_zs is None:
                     logq_zses.append(last_logq_zs)
