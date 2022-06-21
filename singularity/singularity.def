@@ -120,11 +120,11 @@ From: airl_lab/default/airl_env:bare_ci
     echo $tmp_dir
 
     # Main
-    python3 run_experiment.py --save_path $tmp_dir --mem_size=1000000 --interval=100 --do_train "$@"
+    python3 run_experiment.py --save_path="$tmp_dir" "$@"
 
     # Analysis
     # python3 run_plots.py --save_path $DIRNAME --results_path $DIRNAME
-    python3 project.py  --save_path $tmp_dir "$@"
+    python3 project.py  --save_path="$tmp_dir" --n_evals="10000" "$@"
 
 %help
     This is the development and running environment for the DIAYN algorithm on QDgym environments. 
